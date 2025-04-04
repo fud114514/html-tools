@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Minimal Markdown Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: #fafafa;
+            border-bottom: 1px solid #eee;
+            justify-content: flex-end; /* 按钮靠右对齐 */
+            padding-right: 20px; /* 右侧留出一些间距 */
+        }
+
+        .btn {
+            border: 1px solid #ddd;
+            background: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            min-width: 80px; /* 统一按钮宽度 */
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #f5f5f5;
+        }
+
+        .content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        #editor, #preview {
+            width: 50%;
+            height: 100%;
+            padding: 20px;
+        }
+        
+        #editor {
+            resize: none;
+            font-family: monospace;
+            font-size: 14px;
+            border: none;
+            border-left: 1px solid #eee;
+            outline: none;
+            line-height: 1.6;
+        }
+        
+        #preview {
+            overflow-y: auto;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        #preview h1, #preview h2, #preview h3 {
+            margin: 16px 0;
+            font-weight: 500;
+        }
+
+        #preview p {
+            margin: 12px 0;
+        }
+
+        #preview ul, #preview ol {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+
+        #preview code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="toolbar">
+        <button class="btn" onclick="copyText()">一键复制</button>
+        <button class="btn" onclick="exportTxt()">导出文本</button>
+    </div>
+    <div class="content">
+        <div id="preview"></div>
+        <textarea id="editor" placeholder="在这里输入 Markdown 文本..."></textarea>
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const toast = document.getElementById('toast');
+        
+        function showToast(message) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        function updatePreview() {
+            const markdownText = editor.value;
+            const htmlContent = marked.parse(markdownText);
+            preview.innerHTML = htmlContent;
+        }
+
+        async function copyText() {
+            try {
+                await navigator.clipboard.writeText(editor.value);
+                showToast('已复制到剪贴板');
+            } catch (err) {
+                showToast('复制失败');
+            }
+        }
+
+        function exportTxt() {
+            const text = editor.value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'markdown_export.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('已导出为文本文件');
+        }
+
+        editor.addEventListener('input', updatePreview);
+        
+        // 初始示例文本
+        editor.value = `# 极简 Markdown 编辑器
+
+## 功能特点
+- 实时预览
+- 一键复制
+- 导出文本
+
+## 使用方法
+1. 在右侧输入 Markdown 文本
+2. 左侧实时预览
+3. 使用右上角按钮操作
+
+现在就开始编辑吧！`;
+        
+        updatePreview();
+    </script>
+</body>
+</html>
